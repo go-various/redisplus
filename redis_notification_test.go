@@ -2,6 +2,7 @@ package redisplus
 
 import (
 	"github.com/google/uuid"
+	"log"
 	"testing"
 	"time"
 )
@@ -12,13 +13,13 @@ func TestNewNotification(t *testing.T) {
 		Password:           "",
 		KeyPrefix:          "TEST",
 	})
-	view := NewRedisView(cmd,"dev")
+	view := NewRedisCli(cmd,"dev")
 	policy := []time.Duration{
 		time.Second * 2,
 		time.Second * 5,
 		time.Second * 10,
 	}
-	notify, _ := NewNotification("order", view,policy)
+	notify, _ := NewNotification("order", view, log.Default(), policy)
 	if notify == nil{
 		t.Fatal(notify)
 	}

@@ -21,7 +21,7 @@ type redisView struct {
 	pubSub redis.PubSub
 }
 
-func NewRedisView(cmd RedisCmd, prefix string) RedisCli {
+func NewRedisCli(cmd RedisCmd, prefix string) RedisCli {
 	view := &redisView{cmd: cmd, prefix: prefix}
 	return view
 }
