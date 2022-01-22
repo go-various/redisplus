@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-hclog"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -75,10 +75,10 @@ type notification struct {
 	node     string
 	cache    RedisCli
 	policies policies
-	logger   hclog.Logger
+	logger  *log.Logger
 }
 
-func NewNotification(prefix string, cache RedisCli, logger hclog.Logger, policies ...[]time.Duration) (Notification, error) {
+func NewNotification(prefix string, cache RedisCli, logger *log.Logger,policies ...[]time.Duration) (Notification, error) {
 
 	if "" == prefix {
 		return nil, errPrefixNotNil
@@ -91,7 +91,7 @@ func NewNotification(prefix string, cache RedisCli, logger hclog.Logger, policie
 		prefix: prefix,
 		node:   fmt.Sprintf("%s:%d", GetLocalIP(), os.Getpid()),
 		cache:  cache,
-		logger: logger.Named("redis.notification"),
+		logger: logger,
 	}
 
 	if 0 == len(policies) {
@@ -117,14 +117,12 @@ func (n *notification) PutNotification(p *Entity) error {
 
 func (n *notification) Subscribe(handler NotificationHandler) error {
 	space := fmt.Sprintf("__keyspace@*__:%s:%s*", n.cache.KeyPrefix(), n.prefix)
-	if n.logger.IsTrace() {
-		n.logger.Trace("subscribe", "key", space)
-	}
 
 	psub, err := n.cache.PSubscribe(space)
 	if nil != err {
 		return err
 	}
+
 	go func() {
 		for {
 			message, err := psub.ReceiveMessage()
@@ -145,7 +143,8 @@ func (n *notification) Subscribe(handler NotificationHandler) error {
 				putNext := handler(entity, err)
 				if putNext && entity.count < int64(n.policies.length()) {
 					if err := n.PutNotification(entity); err != nil {
-						n.logger.Error("put next", "err", err)
+						n.logger.Println("put notification", "err", err)
+						continue
 					}
 				}
 				if !putNext || (putNext && entity.count >= int64(n.policies.length())) {

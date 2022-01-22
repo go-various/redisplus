@@ -2,7 +2,6 @@ package redisplus
 
 import (
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-hclog"
 	"testing"
 	"time"
 )
@@ -13,16 +12,13 @@ func TestNewNotification(t *testing.T) {
 		Password:           "",
 		KeyPrefix:          "TEST",
 	})
-	logger := hclog.Default()
-	logger = logger.ResetNamed("test")
-	logger.SetLevel(hclog.Trace)
-	view := NewRedisView(cmd,"dev", nil)
+	view := NewRedisView(cmd,"dev")
 	policy := []time.Duration{
 		time.Second * 2,
 		time.Second * 5,
 		time.Second * 10,
 	}
-	notify, _ := NewNotification("order", view, logger,policy)
+	notify, _ := NewNotification("order", view,policy)
 	if notify == nil{
 		t.Fatal(notify)
 	}

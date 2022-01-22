@@ -3,7 +3,6 @@ package redisplus
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/go-hclog"
 	"gopkg.in/redis.v5"
 	"time"
 )
@@ -20,14 +19,10 @@ type redisView struct {
 	prefix string
 	cmd    RedisCmd
 	pubSub redis.PubSub
-	logger hclog.Logger
 }
 
-func NewRedisView(cmd RedisCmd, prefix string, logger hclog.Logger) RedisCli {
+func NewRedisView(cmd RedisCmd, prefix string) RedisCli {
 	view := &redisView{cmd: cmd, prefix: prefix}
-	if logger != nil {
-		view.logger = logger.Named("redis")
-	}
 	return view
 }
 
@@ -58,9 +53,6 @@ func (r *redisView) Scan(cursor uint64, match string, count int64) ([]string, er
 }
 
 func (r *redisView) Get(ctx context.Context, key string) ([]byte, error) {
-	if r.logger != nil && r.logger.IsTrace() {
-		r.logger.Trace("get", "key", r.expandKey(key))
-	}
 	result, err := r.cmd.Get(r.expandKey(key)).Result()
 	if nil != err {
 		return nil, err
@@ -69,10 +61,6 @@ func (r *redisView) Get(ctx context.Context, key string) ([]byte, error) {
 }
 
 func (r *redisView) Set(ctx context.Context, key string, value []byte, duration string) error {
-	if r.logger != nil && r.logger.IsTrace() {
-		r.logger.Trace("set", "key", r.expandKey(key), "value", string(value))
-	}
-
 	if duration != "" {
 		timeout, err := time.ParseDuration(duration)
 		if nil != err {

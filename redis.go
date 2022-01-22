@@ -10,10 +10,10 @@ type RedisCli interface {
 
 	Scan(cursor uint64, match string, count int64) ([]string, error)
 
-	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// SetNX Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	SetNX(ctx context.Context, key string, value []byte, duration string) (bool, error)
 	Get(ctx context.Context, key string) ([]byte, error)
-	// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// Set Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	Set(ctx context.Context, key string, value []byte, duration string) error
 	Del(ctx context.Context, keys ...string) (int64, error)
 	Expire(ctx context.Context, key string, duration string) error
@@ -121,7 +121,7 @@ func (z ZRangeBy) ToRedisRangeBy() redis.ZRangeBy {
 	}
 }
 
-//used as an arg to ZInterMerge and ZUnionMerge.
+// ZMerge used as an arg to ZInterMerge and ZUnionMerge.
 type ZMerge struct {
 	Weights   []float64 `protobuf:"fixed64,1,rep,packed,name=Weights,proto3" json:"Weights,omitempty"`
 	Aggregate string    `protobuf:"bytes,2,opt,name=Aggregate,proto3" json:"Aggregate,omitempty"` //Can be SUM, MIN or MAX.
