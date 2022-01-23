@@ -3,7 +3,6 @@
 package redisplus
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -104,12 +103,11 @@ func NewNotification(prefix string, cache RedisCli, logger *log.Logger,policies 
 }
 
 func (n *notification) PutNotification(p *Entity) error {
-	ctx := context.Background()
-	if err := n.cache.Set(ctx, n.prefix+":"+p.notifyKey(), p.Value, n.policies.last().String()); err != nil {
+	if err := n.cache.Set(n.prefix+":"+p.notifyKey(), p.Value, n.policies.last().String()); err != nil {
 		return err
 	}
 	//设置value的最大缓存过期时间为重试policy的最大时间
-	if err := n.cache.Set(ctx, n.prefix+":"+p.valueKey(), p.Value, n.policies.last().String()); err != nil {
+	if err := n.cache.Set(n.prefix+":"+p.valueKey(), p.Value, n.policies.last().String()); err != nil {
 		return err
 	}
 	return nil
@@ -180,8 +178,7 @@ func (n *notification) decode(src string) (*Entity, error) {
 }
 
 func (n *notification) fetchValue(entity *Entity) error {
-	ctx := context.Background()
-	value, err := n.cache.Get(ctx, entity.valueKey())
+	value, err := n.cache.Get(entity.valueKey())
 	entity.Value = value
 	return err
 }
@@ -191,16 +188,16 @@ func (n *notification) lock(p *Entity) bool {
 	//"${NOTIFY_PREFIX}:NOTIFY_LOCK:15ba4ad6-5923-4a9d-89c9-b35f33c60fa3"
 	setKey := fmt.Sprintf("%s:%s:%s",n.prefix, NotifyLockPrefix,  p.Key)
 	value := fmt.Sprintf("%s:%s:%d", NotifyLockPrefix, n.node, GetRoutineID())
-	ret, _ := n.cache.SetNX(context.Background(), setKey, []byte(value), n.policies.last().String())
+	ret, _ := n.cache.SetNX(setKey, []byte(value), n.policies.last().String())
 	if ret {
 		return ret
 	}
-	rVal, _ := n.cache.Get(context.Background(), setKey)
+	rVal, _ := n.cache.Get(setKey)
 	return value == string(rVal)
 }
 
 //解锁通知实例
 func (n *notification) unlock(p *Entity) {
 	setKey := fmt.Sprintf("%s:%s:%s", n.prefix, NotifyLockPrefix,  p.Key)
-	n.cache.Del(context.Background(), setKey)
+	n.cache.Del( setKey)
 }

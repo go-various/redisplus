@@ -1,20 +1,18 @@
 package redisplus
 
-import "context"
-
-func (r *redisView) HSetNX(ctx context.Context, key, field string, value []byte) error {
+func (r *redisView) HSetNX(key, field string, value []byte) error {
 	return wrapResult(func() (interface{}, error) {
 		return r.cmd.HSetNX(r.expandKey(key), field, value).Result()
 	})
 }
 
-func (r *redisView) HSet(ctx context.Context, key, field string, value []byte) error {
+func (r *redisView) HSet(key, field string, value []byte) error {
 	return wrapResult(func() (interface{}, error) {
 		return r.cmd.HSet(r.expandKey(key), field, value).Result()
 	})
 }
 
-func (r *redisView) HMSet(ctx context.Context, key string, Values map[string][]byte) error {
+func (r *redisView) HMSet(key string, Values map[string][]byte) error {
 	if nil == Values {
 		return ErrorInputValuesIsNil
 	}
@@ -27,12 +25,12 @@ func (r *redisView) HMSet(ctx context.Context, key string, Values map[string][]b
 	})
 }
 
-func (r *redisView) HGet(ctx context.Context, key, field string) ([]byte, error) {
+func (r *redisView) HGet(key, field string) ([]byte, error) {
 	result, err := r.cmd.HGet(r.expandKey(key), field).Result()
 	return []byte(result), err
 }
 
-func (r *redisView) HMGet(ctx context.Context, key string, fields ...string) ([][]byte, error) {
+func (r *redisView) HMGet(key string, fields ...string) ([][]byte, error) {
 	result, err := r.cmd.HMGet(r.expandKey(key), fields...).Result()
 	if nil != err {
 		return nil, err
@@ -44,7 +42,7 @@ func (r *redisView) HMGet(ctx context.Context, key string, fields ...string) ([]
 	return out, nil
 }
 
-func (r *redisView) HGetAll(ctx context.Context, key string) (map[string][]byte, error) {
+func (r *redisView) HGetAll(key string) (map[string][]byte, error) {
 	result, err := r.cmd.HGetAll(r.expandKey(key)).Result()
 	if nil != err {
 		return nil, err
@@ -56,24 +54,24 @@ func (r *redisView) HGetAll(ctx context.Context, key string) (map[string][]byte,
 	return out, nil
 }
 
-func (r *redisView) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
+func (r *redisView) HDel(key string, fields ...string) (int64, error) {
 	return r.cmd.HDel(r.expandKey(key), fields...).Result()
 }
 
-func (r *redisView) HLen(ctx context.Context, key string) (int64, error) {
+func (r *redisView) HLen(key string) (int64, error) {
 	return r.cmd.HLen(r.expandKey(key)).Result()
 }
 
-func (r *redisView) HKeys(ctx context.Context, key string) ([]string, error) {
+func (r *redisView) HKeys(key string) ([]string, error) {
 	return r.cmd.HKeys(r.expandKey(key)).Result()
 }
 
-func (r *redisView) HValues(ctx context.Context, key string) ([][]byte, error) {
+func (r *redisView) HValues(key string) ([][]byte, error) {
 	return wrapSliceStringToSliceBytes(func() ([]string, error) {
 		return r.cmd.HVals(r.expandKey(key)).Result()
 	})
 }
 
-func (r *redisView) HExists(ctx context.Context, key, field string) (bool, error) {
+func (r *redisView) HExists(key, field string) (bool, error) {
 	return r.cmd.HExists(r.expandKey(key), field).Result()
 }

@@ -1,9 +1,9 @@
 package redisplus
 
 import (
-	"context"
 	"errors"
 	"gopkg.in/redis.v5"
+	"strings"
 	"time"
 )
 
@@ -11,7 +11,6 @@ var ErrorResultNotOK = errors.New("result is not OK")
 var ErrorResultNotTrue = errors.New("result is not true")
 var ErrorInputValuesIsNil = errors.New("input values is nil")
 
-const RedisKeySep = ":"
 
 var _ RedisCli = (*redisView)(nil)
 
@@ -21,9 +20,16 @@ type redisView struct {
 	pubSub redis.PubSub
 }
 
-func NewRedisCli(cmd RedisCmd, prefix string) RedisCli {
-	view := &redisView{cmd: cmd, prefix: prefix}
-	return view
+func NewRedisCli(config *Config, prefix string) (RedisCli,error) {
+	cmd, err := NewRedisCmd(config)
+	if err != nil {
+		return nil, err
+	}
+	view := &redisView{
+		cmd: cmd,
+		prefix: strings.Join([]string{config.KeyPrefix, prefix}, RedisKeySep),
+	}
+	return view, nil
 }
 
 func (r *redisView) KeyPrefix() string {
@@ -33,7 +39,7 @@ func (r *redisView) NativeCmd() RedisCmd {
 	return r.cmd
 }
 
-func (r *redisView) SetNX(ctx context.Context, key string, value []byte, duration string) (bool, error) {
+func (r *redisView) SetNX(key string, value []byte, duration string) (bool, error) {
 	if duration != "" {
 		timeout, err := time.ParseDuration(duration)
 		if nil != err {
@@ -52,7 +58,7 @@ func (r *redisView) Scan(cursor uint64, match string, count int64) ([]string, er
 	return result, err
 }
 
-func (r *redisView) Get(ctx context.Context, key string) ([]byte, error) {
+func (r *redisView) Get(key string) ([]byte, error) {
 	result, err := r.cmd.Get(r.expandKey(key)).Result()
 	if nil != err {
 		return nil, err
@@ -60,7 +66,7 @@ func (r *redisView) Get(ctx context.Context, key string) ([]byte, error) {
 	return []byte(result), nil
 }
 
-func (r *redisView) Set(ctx context.Context, key string, value []byte, duration string) error {
+func (r *redisView) Set(key string, value []byte, duration string) error {
 	if duration != "" {
 		timeout, err := time.ParseDuration(duration)
 		if nil != err {
@@ -71,7 +77,7 @@ func (r *redisView) Set(ctx context.Context, key string, value []byte, duration 
 	return r.cmd.Set(r.expandKey(key), value, 0).Err()
 }
 
-func (r *redisView) Del(ctx context.Context, keys ...string) (int64, error) {
+func (r *redisView) Del(keys ...string) (int64, error) {
 	var all []string
 	for _, key := range keys {
 		all = append(all, r.expandKey(key))
@@ -79,11 +85,12 @@ func (r *redisView) Del(ctx context.Context, keys ...string) (int64, error) {
 	return r.cmd.Del(all...).Result()
 }
 
-func (r *redisView) Expire(ctx context.Context, key string, duration string) error {
+func (r *redisView) Expire(key string, duration string) error {
 	timeout, err := time.ParseDuration(duration)
 	if nil != err {
 		return err
 	}
+
 	return wrapResult(func() (interface{}, error) {
 		return r.cmd.Expire(r.expandKey(key), timeout).Result()
 	})

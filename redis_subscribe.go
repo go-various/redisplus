@@ -16,7 +16,8 @@ func (r *redisView) Subscribe(channels ...string) (*redis.PubSub, error) {
 	}
 }
 
-// PSubscribe  订阅
+//PSubscribe  订阅
+//channels ...string
 //@return *redis.PubSub, error
 func (r *redisView) PSubscribe(channels ...string) (*redis.PubSub, error) {
 	switch v := r.cmd.(type) {

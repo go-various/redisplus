@@ -1,7 +1,6 @@
 package redisplus
 
 import (
-	"context"
 	"github.com/google/uuid"
 	"gopkg.in/redis.v5"
 )
@@ -56,6 +55,7 @@ func (r *redisView) GeoPos(key string, members ...string) ([]*redis.GeoPos, erro
 	if err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
@@ -72,7 +72,7 @@ func (r *redisView) GeoCalculateDistance(key string, location1 Location, locatio
 
 	defer func() {
 		//清除key
-		r.Del(context.Background(), key)
+		r.Del(key)
 	}()
 
 	//当redis中存在相同的key+name的时候会覆盖，存在并发问题

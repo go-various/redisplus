@@ -1,9 +1,30 @@
 package redisplus
 
 import (
-	"context"
+	"crypto/tls"
 	"gopkg.in/redis.v5"
+	"time"
 )
+
+const RedisKeySep = ":"
+
+type Config struct {
+	Addrs        []string      `hcl:"addrs"`      //集群地址
+	Password     string        `hcl:"password"`   //密码
+	KeyPrefix    string        `hcl:"key_prefix"` //key前缀
+	DbIndex      int           `hcl:"db_index"`   //数据索引
+	DialTimeout  time.Duration `hcl:"dial_timeout"`
+	ReadTimeout  time.Duration `hcl:"read_timeout"`
+	WriteTimeout time.Duration `hcl:"write_timeout"`
+	ReadOnly     bool          `hcl:"read_only"`
+	// PoolSize applies per cluster node and not for the whole cluster.
+	PoolSize           int           `hcl:"pool_size"`
+	PoolTimeout        time.Duration `hcl:"pool_timeout"`
+	IdleTimeout        time.Duration `hcl:"idle_timeout"`
+	IdleCheckFrequency time.Duration `hcl:"idle_check_frequency"`
+	UseCluster         bool          `hcl:"use_cluster"`
+	TLSConfig          *tls.Config   `hcl:"tls_config"`
+}
 
 type RedisCli interface {
 	KeyPrefix() string
@@ -11,67 +32,67 @@ type RedisCli interface {
 	Scan(cursor uint64, match string, count int64) ([]string, error)
 
 	// SetNX Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	SetNX(ctx context.Context, key string, value []byte, duration string) (bool, error)
-	Get(ctx context.Context, key string) ([]byte, error)
+	SetNX(key string, value []byte, duration string) (bool, error)
+	Get(key string) ([]byte, error)
 	// Set Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	Set(ctx context.Context, key string, value []byte, duration string) error
-	Del(ctx context.Context, keys ...string) (int64, error)
-	Expire(ctx context.Context, key string, duration string) error
-	HSetNX(ctx context.Context, key, field string, value []byte) error
-	HSet(ctx context.Context, key, field string, value []byte) error
-	HMSet(ctx context.Context, key string, Values map[string][]byte) error
-	HGet(ctx context.Context, key, field string) ([]byte, error)
-	HMGet(ctx context.Context, key string, fields ...string) ([][]byte, error)
-	HGetAll(ctx context.Context, key string) (map[string][]byte, error)
-	HDel(ctx context.Context, key string, fields ...string) (int64, error)
-	HLen(ctx context.Context, key string) (int64, error)
-	HKeys(ctx context.Context, key string) ([]string, error)
-	HValues(ctx context.Context, key string) ([][]byte, error)
-	HExists(ctx context.Context, key, field string) (bool, error)
-	LRem(ctx context.Context, key string, count int64, value []byte) (int64, error)
-	LIndex(ctx context.Context, key string, index int64) ([]byte, error)
-	LTrim(ctx context.Context, key string, start, stop int64) error
-	LSet(ctx context.Context, key string, index int64, value []byte) error
-	LPush(ctx context.Context, key string, values ...[]byte) (int64, error)
-	LAppend(ctx context.Context, key string, values ...[]byte) (int64, error)
-	LPop(ctx context.Context, key string) ([]byte, error)
-	LRPop(ctx context.Context, key string) ([]byte, error)
-	LRange(ctx context.Context, key string, start, stop int64) ([][]byte, error)
-	LLen(ctx context.Context, key string) (int64, error)
-	LInsert(ctx context.Context, key string, op InsertOP, pivot, value []byte) (int64, error)
-	SLen(ctx context.Context, key string) (int64, error)
-	SAdd(ctx context.Context, key string, values ...[]byte) (int64, error)
-	SRem(ctx context.Context, key string, values ...[]byte) (int64, error)
-	SPop(ctx context.Context, key string) ([]byte, error)
-	SPopN(ctx context.Context, key string, count int64) ([][]byte, error)
-	SDiff(ctx context.Context, keys ...string) ([][]byte, error)
-	SDiffMerge(ctx context.Context, destination string, keys ...string) (int64, error)
-	SInter(ctx context.Context, keys ...string) ([][]byte, error)
-	SInterMerge(ctx context.Context, destination string, keys ...string) (int64, error)
-	SUnion(ctx context.Context, keys ...string) ([][]byte, error)
-	SUnionMerge(ctx context.Context, destination string, keys ...string) (int64, error)
-	ZLen(ctx context.Context, key string) (int64, error)
-	ZCount(ctx context.Context, key string, min, max float64) (int64, error)
-	ZLexCount(ctx context.Context, key, min, max string) (int64, error)
-	ZAdd(ctx context.Context, key string, members ...*ZMember) (int64, error)
-	ZRem(ctx context.Context, key string, members ...*ZMember) (int64, error)
-	ZRemRangeByLex(ctx context.Context, key, min, max string) (int64, error)
-	ZRemRangeByScore(ctx context.Context, key string, min, max float64) (int64, error)
-	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error)
+	Set(key string, value []byte, duration string) error
+	Del(keys ...string) (int64, error)
+	Expire(key string, duration string) error
+	HSetNX(key, field string, value []byte) error
+	HSet(key, field string, value []byte) error
+	HMSet(key string, Values map[string][]byte) error
+	HGet(key, field string) ([]byte, error)
+	HMGet(key string, fields ...string) ([][]byte, error)
+	HGetAll(key string) (map[string][]byte, error)
+	HDel(key string, fields ...string) (int64, error)
+	HLen(key string) (int64, error)
+	HKeys(key string) ([]string, error)
+	HValues(key string) ([][]byte, error)
+	HExists(key, field string) (bool, error)
+	LRem(key string, count int64, value []byte) (int64, error)
+	LIndex(key string, index int64) ([]byte, error)
+	LTrim(key string, start, stop int64) error
+	LSet(key string, index int64, value []byte) error
+	LPush(key string, values ...[]byte) (int64, error)
+	LAppend(key string, values ...[]byte) (int64, error)
+	LPop(key string) ([]byte, error)
+	LRPop(key string) ([]byte, error)
+	LRange(key string, start, stop int64) ([][]byte, error)
+	LLen(key string) (int64, error)
+	LInsert(key string, op InsertOP, pivot, value []byte) (int64, error)
+	SLen(key string) (int64, error)
+	SAdd(key string, values ...[]byte) (int64, error)
+	SRem(key string, values ...[]byte) (int64, error)
+	SPop(key string) ([]byte, error)
+	SPopN(key string, count int64) ([][]byte, error)
+	SDiff(keys ...string) ([][]byte, error)
+	SDiffMerge(destination string, keys ...string) (int64, error)
+	SInter(keys ...string) ([][]byte, error)
+	SInterMerge(destination string, keys ...string) (int64, error)
+	SUnion(keys ...string) ([][]byte, error)
+	SUnionMerge(destination string, keys ...string) (int64, error)
+	ZLen(key string) (int64, error)
+	ZCount(key string, min, max float64) (int64, error)
+	ZLexCount(key, min, max string) (int64, error)
+	ZAdd(key string, members ...*ZMember) (int64, error)
+	ZRem(key string, members ...*ZMember) (int64, error)
+	ZRemRangeByLex(key, min, max string) (int64, error)
+	ZRemRangeByScore(key string, min, max float64) (int64, error)
+	ZRemRangeByRank(key string, start, stop int64) (int64, error)
 
-	ZRange(ctx context.Context, key string, start, stop int64, reverse, withScores bool) ([]*ZMember, error)
+	ZRange(key string, start, stop int64, reverse, withScores bool) ([]*ZMember, error)
 
-	ZRangeByScore(ctx context.Context, key string, rangeBy ZRangeBy, reverse, withScores bool) ([]*ZMember, error)
+	ZRangeByScore(key string, rangeBy ZRangeBy, reverse, withScores bool) ([]*ZMember, error)
 
-	ZRangeByLex(ctx context.Context, key string, rangeBy ZRangeBy, reverse bool) ([]*ZMember, error)
+	ZRangeByLex(key string, rangeBy ZRangeBy, reverse bool) ([]*ZMember, error)
 
-	ZRank(ctx context.Context, key string, member []byte, reverse bool) (int64, error)
+	ZRank(key string, member []byte, reverse bool) (int64, error)
 
-	ZIncr(ctx context.Context, key string, member *ZMember) (float64, error)
-	ZIncrNX(ctx context.Context, key string, member *ZMember) (float64, error)
+	ZIncr(key string, member *ZMember) (float64, error)
+	ZIncrNX(key string, member *ZMember) (float64, error)
 
-	ZInterMerge(ctx context.Context, destination string, merge *ZMerge, keys ...string) (int64, error)
-	ZUnionMerge(ctx context.Context, destination string, merge *ZMerge, keys ...string) (int64, error)
+	ZInterMerge(destination string, merge *ZMerge, keys ...string) (int64, error)
+	ZUnionMerge(destination string, merge *ZMerge, keys ...string) (int64, error)
 
 	GeoAdd(key string, geoLocation ...*redis.GeoLocation) (int64, error)
 	GeoRadius(key string, longitude, latitude float64, query *redis.GeoRadiusQuery) ([]redis.GeoLocation, error)
@@ -99,7 +120,7 @@ type RedisEntry struct {
 	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-//zset
+// ZMember map
 type ZMember struct {
 	Score  float64 `protobuf:"fixed32,1,opt,name=score,proto3" json:"score,omitempty"`
 	Member []byte  `protobuf:"bytes,2,opt,name=member,proto3" json:"member,omitempty"`

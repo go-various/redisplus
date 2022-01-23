@@ -1,12 +1,10 @@
 package redisplus
 
-import "context"
-
-func (r *redisView) SLen(ctx context.Context, key string) (int64, error) {
+func (r *redisView) SLen(key string) (int64, error) {
 	return r.cmd.SCard(r.expandKey(key)).Result()
 }
 
-func (r *redisView) SAdd(ctx context.Context, key string, values ...[]byte) (int64, error) {
+func (r *redisView) SAdd(key string, values ...[]byte) (int64, error) {
 	var in []interface{}
 	for _, value := range values {
 		in = append(in, value)
@@ -14,7 +12,7 @@ func (r *redisView) SAdd(ctx context.Context, key string, values ...[]byte) (int
 	return r.cmd.SAdd(r.expandKey(key), in...).Result()
 }
 
-func (r *redisView) SRem(ctx context.Context, key string, values ...[]byte) (int64, error) {
+func (r *redisView) SRem(key string, values ...[]byte) (int64, error) {
 	var in []interface{}
 	for _, value := range values {
 		in = append(in, value)
@@ -22,7 +20,7 @@ func (r *redisView) SRem(ctx context.Context, key string, values ...[]byte) (int
 	return r.cmd.SRem(r.expandKey(key), in...).Result()
 }
 
-func (r *redisView) SPop(ctx context.Context, key string) ([]byte, error) {
+func (r *redisView) SPop(key string) ([]byte, error) {
 	result, err := r.cmd.SPop(r.expandKey(key)).Result()
 	if nil != err {
 		return nil, err
@@ -30,23 +28,24 @@ func (r *redisView) SPop(ctx context.Context, key string) ([]byte, error) {
 	return []byte(result), nil
 }
 
-func (r *redisView) SPopN(ctx context.Context, key string, count int64) ([][]byte, error) {
+func (r *redisView) SPopN(key string, count int64) ([][]byte, error) {
 	return wrapSliceStringToSliceBytes(func() ([]string, error) {
 		return r.cmd.SPopN(r.expandKey(key), count).Result()
 	})
 }
 
-func (r *redisView) SDiff(ctx context.Context, keys ...string) ([][]byte, error) {
+func (r *redisView) SDiff(keys ...string) ([][]byte, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
 	}
+
 	return wrapSliceStringToSliceBytes(func() ([]string, error) {
 		return r.cmd.SDiff(inkeys...).Result()
 	})
 }
 
-func (r *redisView) SDiffMerge(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r *redisView) SDiffMerge(destination string, keys ...string) (int64, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
@@ -54,7 +53,7 @@ func (r *redisView) SDiffMerge(ctx context.Context, destination string, keys ...
 	return r.cmd.SDiffStore(destination, inkeys...).Result()
 }
 
-func (r *redisView) SInter(ctx context.Context, keys ...string) ([][]byte, error) {
+func (r *redisView) SInter(keys ...string) ([][]byte, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
@@ -64,7 +63,7 @@ func (r *redisView) SInter(ctx context.Context, keys ...string) ([][]byte, error
 	})
 }
 
-func (r *redisView) SInterMerge(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r *redisView) SInterMerge(destination string, keys ...string) (int64, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
@@ -72,7 +71,7 @@ func (r *redisView) SInterMerge(ctx context.Context, destination string, keys ..
 	return r.cmd.SInterStore(destination, keys...).Result()
 }
 
-func (r *redisView) SUnion(ctx context.Context, keys ...string) ([][]byte, error) {
+func (r *redisView) SUnion(keys ...string) ([][]byte, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
@@ -82,7 +81,7 @@ func (r *redisView) SUnion(ctx context.Context, keys ...string) ([][]byte, error
 	})
 }
 
-func (r *redisView) SUnionMerge(ctx context.Context, destination string, keys ...string) (int64, error) {
+func (r *redisView) SUnionMerge(destination string, keys ...string) (int64, error) {
 	var inkeys []string
 	for _, key := range keys {
 		inkeys = append(inkeys, r.expandKey(key))
