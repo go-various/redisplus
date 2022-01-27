@@ -5,7 +5,7 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-var ErrRedisAddrsEmpty = errors.New("redis addrs is empty")
+var ErrRedisAddrsEmpty = errors.New("addrs is empty")
 
 
 type RedisCmd interface {

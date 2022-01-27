@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-//获取go routine id  相当于thread id
+// GetRoutineID 获取go routine id  相当于thread id
 func GetRoutineID() uint64 {
 	b := make([]byte, 64)
 	b = b[:runtime.Stack(b, false)]
@@ -17,7 +17,7 @@ func GetRoutineID() uint64 {
 	return n
 }
 
-// getLocalIP 获取本地ip
+// GetLocalIP 获取本地ip
 func GetLocalIP() string {
 	addr, err := net.InterfaceAddrs()
 	if err != nil {

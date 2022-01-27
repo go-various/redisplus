@@ -2,24 +2,32 @@ package redisplus
 
 import (
 	"github.com/google/uuid"
-	"log"
+	"github.com/hashicorp/go-hclog"
 	"testing"
 	"time"
 )
 
 func TestNewNotification(t *testing.T) {
-	cmd, _ := NewRedisCmd(&Config{
+	cfg := &Config{
 		Addrs:              []string{"localhost:6379"},
 		Password:           "",
 		KeyPrefix:          "TEST",
-	})
-	view := NewRedisCli(cmd,"dev")
-	policy := []time.Duration{
-		time.Second * 2,
-		time.Second * 5,
-		time.Second * 10,
 	}
-	notify, _ := NewNotification("order", view, log.Default(), policy)
+
+	view, _ := NewRedisCli(cfg,"dev")
+	policies := []time.Duration{
+		time.Second * 10,
+		time.Second * 15,
+		time.Second * 30,
+	}
+
+	t.Log(policies)
+	notify, err := NewNotification("order", view, hclog.Default(), policies)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
 	if notify == nil{
 		t.Fatal(notify)
 	}
@@ -28,10 +36,12 @@ func TestNewNotification(t *testing.T) {
 		Key:   uuid.New().String(),
 		Value: []byte("test-notify"),
 	}
+
 	notify.Subscribe(func(p *Entity, err error) PutNext {
-		t.Log(p, err)
-		return true
+		t.Log(err, p.Key, p.Value, p.valueKey(), p.notifyKey())
+		return p.count == 1
 	})
+
 	notify.PutNotification(entity)
 	done := make(chan byte)
 	<-done

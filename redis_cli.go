@@ -61,7 +61,7 @@ func (r *redisView) Scan(cursor uint64, match string, count int64) ([]string, er
 func (r *redisView) Get(key string) ([]byte, error) {
 	result, err := r.cmd.Get(r.expandKey(key)).Result()
 	if nil != err {
-		return nil, err
+		return nil, errors.New("get value with key " + r.expandKey(key) + ", error: "+err.Error())
 	}
 	return []byte(result), nil
 }
