@@ -27,7 +27,13 @@ func NewRedisCli(config *Config, prefix string) (RedisCli,error) {
 	}
 	view := &redisView{
 		cmd: cmd,
-		prefix: strings.Join([]string{config.KeyPrefix, prefix}, RedisKeySep),
+	}
+	if config.KeyPrefix != "" && prefix != ""{
+		view.prefix = strings.Join([]string{config.KeyPrefix, prefix}, RedisKeySep)
+	}else if config.KeyPrefix != ""{
+		view.prefix = config.KeyPrefix
+	}else {
+		view.prefix = prefix
 	}
 	return view, nil
 }
